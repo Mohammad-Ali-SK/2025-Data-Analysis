@@ -1,0 +1,1 @@
+[{"name": "ice cream", "price": 20, "quantity": 20}, {"name": "bottle", "price": 50, "quantity": 100}, {"name": "3", "price": 1, "quantity": 3}]
