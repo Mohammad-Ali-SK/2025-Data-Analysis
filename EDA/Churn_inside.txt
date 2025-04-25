@@ -1,0 +1,6 @@
+1. Senior Citizens are more likely to churn.
+2. People with no partners are more likely to churn.
+3. Monthly contracts are more likely to churn because they are free customer.
+4. People who pay via Electronic check are more likely to churn.
+5. Monthly Charges and Total Charges are positively correlated.
+6. Churn is High When Monthly Charges are High.
