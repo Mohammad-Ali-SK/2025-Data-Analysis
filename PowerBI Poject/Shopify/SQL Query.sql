@@ -143,13 +143,104 @@ limit  1
 ## 🔴 **Advanced SQL Questions**
 
 21. Calculate cumulative revenue over time (by date).
+
+SELECT "Invoice_Date"::date AS order_date,
+       SUM("Total_Price_Usd") OVER (ORDER BY "Invoice_Date"::date) AS cumulative_revenue
+FROM "Shopify_Sales"
+
+
 22. Show a running total of tax collected over time.
+
+SELECT "Invoice_Date", 
+       SUM("Total_Tax") OVER (ORDER BY "Invoice_Date") AS running_tax_total
+FROM "Shopify_Sales";
+
+
+
+
 23. Find the percentage of orders made using each payment gateway.
+
+SELECT 
+  payment_method,
+  ROUND(100.0 * number_of_payment / SUM(number_of_payment) OVER (), 2) AS percentage_of_orders
+FROM (
+  SELECT 
+    "Gateway" AS payment_method, 
+    COUNT(*) AS number_of_payment
+  FROM "Shopify_Sales"
+  GROUP BY "Gateway"
+) AS per
+ORDER BY percentage_of_orders DESC;
+
+
 24. Compare the average order value across provinces or states.
-25. Identify customers who spent more than the average customer.
-26. Detect any duplicate order numbers.
-27. List the top 3 cities by total tax collected.
-28. Count how many orders were made in each hour of the day.
-29. Calculate revenue per unit for each order.
-30. Create a pivot-style summary of revenue by country and product type.
+
+SELECT 
+  "Billing_Address_Province" AS province,
+  ROUND(AVG("Total_Price_Usd")::numeric, 2) AS avg_order_value
+FROM "Shopify_Sales"
+GROUP BY "Billing_Address_Province"
+ORDER BY avg_order_value DESC;
+
+
+
+
+-- 25. Identify customers who spent more than the average customer.
+
+WITH avg_customer_spend AS (
+  SELECT 
+    "Customer_Id",
+    SUM("Total_Price_Usd") AS total_spent
+  FROM "Shopify_Sales"
+  GROUP BY "Customer_Id"
+),
+overall_avg AS (
+  SELECT AVG(total_spent) AS avg_spent_all FROM avg_customer_spend
+)
+
+SELECT 
+  a."Customer_Id" AS customer,
+  a.total_spent
+FROM avg_customer_spend a, overall_avg o
+WHERE a.total_spent > o.avg_spent_all
+ORDER BY a.total_spent DESC;
+
+-- 26. Detect any duplicate order numbers.
+SELECT "Order_Number", COUNT(*) 
+FROM "Shopify_Sales"
+GROUP BY "Order_Number"
+HAVING COUNT(*) > 1;
+
+
+-- 27. List the top 3 cities by total tax collected.
+
+SELECT "CITY", SUM("Total_Tax") AS total_tax
+FROM "Shopify_Sales"
+GROUP BY "CITY"
+ORDER BY total_tax DESC
+LIMIT 3;
+
+-- 28. Count how many orders were made in each hour of the day.
+SELECT 
+  EXTRACT(HOUR FROM TO_TIMESTAMP("Invoice_Date", 'YYYY-MM-DD HH24:MI:SS')) AS order_hour,
+  COUNT(*) AS total_orders
+FROM "Shopify_Sales"
+GROUP BY order_hour
+ORDER BY order_hour;
+
+
+
+-- 29. Calculate revenue per unit for each order.
+
+SELECT "Order Number", "Customer Id", "Total Price Usd", "Quantity", 
+       ("Total Price Usd" / NULLIF("Quantity", 0)) AS revenue_per_unit
+FROM shopify_sales;
+
+-- 30. Create a pivot-style summary of revenue by country and product type.
+
+SELECT "Billing Address Country", "Product Type", SUM("Total Price Usd") AS revenue
+FROM shopify_sales
+GROUP BY "Billing Address Country", "Product Type"
+ORDER BY revenue DESC;
+
 
